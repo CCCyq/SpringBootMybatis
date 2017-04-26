@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" th:src="@{/js/jquery-3.1.1.js}"></script>
+    <script type="text/javascript" th:src="@{/js/dialog-min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/ui-dialog.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/user.css}"/>
+    <script type="text/javascript">
+        function funDelete(delete1) {
+            var deleteId = delete1.getElementsByTagName('input')[0].value;
+            $.ajax({
+                type: "GET",
+                url: "delete.do",
+                data: "u_id=" + deleteId,
+                async: false,
+                success: function (datas) {
+                    if(datas.code!==10000) {
+                        alert(datas.msg);
+                        return;
+                    }
+                    var jsondata=datas.data;
+                    alert("id=" + jsondata + "的用户已经删除了");
+                },
+                error: function () {
+                    alert("Error!");
+                }
+            });
+            $(delete1).hide();
+        }
+        function funInsert(insert1) {
+            $.ajax({
+                cache: true,
+                type: "POST",
+                url: "insert.do",
+                data: $('#form1').serialize(),
+                async: false,
+                success: function (datas) {
+                    if(datas.code!==10000) {
+                        alert(datas.msg);
+                        return;
+                    }
+                    var jsondata=datas.data;
+                    var text = '<tr>'
+                            + '<td><input type="text" id="" value="' + jsondata.id + '" readonly="readonly"> </input></td>'
+                            + '<td>' + jsondata.name + '</td>'
+                            + '<td>' + jsondata.age + '</td>'
+                            + '<td>' + jsondata.password + '</td>'
+                            + '<td><input id="" type="button" value="更改" onclick="funUpdate(this.parentNode.parentNode)"/>'
+                            + '    <input id="" type="button" value="删除" onclick="funDelete(this.parentNode.parentNode)"/></td>'
+                            + '</tr>';
+                    $("#mytable tr:last-child").after(text);
+                    $("#form1 input").eq(0).val('');
+                    $("#form1 input").eq(1).val('');
+                    $("#form1 input").eq(2).val('');
+                },
+                error: function () {
+                    alert("Error!");
+                }
+            });
+        }
+        function funUpdate(update1) {
+            var updateid = update1.getElementsByTagName('input')[0].value;
+            $.ajax({
+                type: "GET",
+                url: "selectOne.do",
+                data: "u_id=" + updateid,
+                success: function (datas) {
+                    if(datas.code!==10000) {
+                        alert(datas.msg);
+                        return;
+                    }
+                    var jsondata=datas.data;
+                    //eg.  {"id":60,"name":"23","age":33,"password":"14"}
+                    //var jsondata = eval("(" + datas + ")");
+                    //console.log(jsondata);
+                    //eg.  Object {id: 60, name: "23", age: 33, password: "14"}
+                    var d = dialog({
+                        title: '更改用户信息',
+                        content: '<form id="updateform">'
+                        + 'id:<input name="u_id" type="text" value="' + jsondata.id + '" readonly="readonly"/>  <br/><br/>'
+                        + 'name:<input name="u_name" type="text" value="' + jsondata.name + '" />'
+                        + 'age:<input name="u_age" type="text" value="' + jsondata.age + '" />'
+                        + 'password:<input name="u_pwd" type="text" value="' + jsondata.password + '" />'
+                        + '</form>',
+                        ok: function () {
+                            $.ajax({
+                                cache: true,
+                                type: "POST",
+                                url: "updateOne.do",
+                                data: $('#updateform').serialize(),
+                                async: false,
+                                success: function (datas) {
+                                    if(datas.code!==10000) {
+                                        alert(datas.msg);
+                                        return;
+                                    }
+                                    var jsondata=datas.data;
+                                    var index = $(update1).index(); //当前行数
+                                    $("tr:eq(" + index + ") td:eq(1)").html(jsondata.name);
+                                    $("tr:eq(" + index + ") td:eq(2)").html(jsondata.age);
+                                    $("tr:eq(" + index + ") td:eq(3)").html(jsondata.password);
+                                },
+                                error: function () {
+                                    alert("Error!");
+                                }
+                            });
+                            d.close().remove();
+                        }
+                    });
+                    d.show();
+                },
+                error: function () {
+                    alert("Error!");
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+<table id="mytable" cellspacing="0">
+    <tr>
+        <th>id</th>
+        <th>name</th>
+        <th>age</th>
+        <th>password</th>
+        <th>操作</th>
+    </tr>
+    <tr th:each="users:${userList}">
+        <td><input type="text" id="userid" th:value="${users.id}" readonly="readonly"> </input></td>
+        <td th:text="${users.name}"></td>
+        <td th:text="${users.age}"></td>
+        <td th:text="${users.password}"></td>
+        <td>
+            <input id="update1" type="button" value="更改" onclick="funUpdate(this.parentNode.parentNode)"/>
+            <input id="delete1" type="button" value="删除" onclick="funDelete(this.parentNode.parentNode)"/>
+        </td>
+    </tr>
+</table>
+<br/><br/>
+
+<form id="form1">
+    name:<input name="u_name" type="text"/>
+    age:<input name="u_age" type="text"/>
+    password:<input name="u_pwd" type="text"/>
+    <input id="insert1" type="button" value="增加用户" onclick="funInsert(this.parentNode)"/>
+</form>
+
+</body>
+</html>
