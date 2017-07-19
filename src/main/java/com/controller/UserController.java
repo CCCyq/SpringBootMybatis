@@ -6,9 +6,10 @@ import com.model.User;
 import com.service.UserService;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
@@ -22,6 +23,14 @@ public class UserController {
     private static Logger logger = Logger.getLogger(UserController.class);
     @Autowired
     private UserService userService;
+
+
+    @RequestMapping("/test")
+    public ApiResult test() {
+        System.out.println(111);
+        throw new BusinessException("eeeor");
+//        return ApiResult.success(1);
+    }
 
     @RequestMapping("select")
     public ModelAndView selectAll(){
